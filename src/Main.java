@@ -2,34 +2,67 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Main {
-    private static final AtomicInteger count3 = new AtomicInteger();
-    private static final AtomicInteger count4 = new AtomicInteger();
-    private static final AtomicInteger count5 = new AtomicInteger();
+    private static final AtomicInteger count3 = new AtomicInteger(0);
+    private static final AtomicInteger count4 = new AtomicInteger(0);
+    private static final AtomicInteger count5 = new AtomicInteger(0);
 
     public static void main(String[] args) throws InterruptedException {
-        String[] texts = generateTexts(100_000);
-
-        Thread thread3 = new Thread(() -> countBeautiful(texts, 3, count3));
-        Thread thread4 = new Thread(() -> countBeautiful(texts, 4, count4));
-        Thread thread5 = new Thread(() -> countBeautiful(texts, 5, count5));
-        thread3.start();
-        thread4.start();
-        thread5.start();
-        thread3.join();
-        thread4.join();
-        thread5.join();
-        System.out.println("Красивых слов с длиной 3: " + count3.get() + " шт");
-        System.out.println("Красивых слов с длиной 4: " + count4.get() + " шт");
-        System.out.println("Красивых слов с длиной 5: " + count5.get() + " шт");
-    }
-
-    private static String[] generateTexts(int count) {
         Random random = new Random();
-        String[] texts = new String[count];
+        String[] texts = new String[100_000];
         for (int i = 0; i < texts.length; i++) {
             texts[i] = generateText("abc", 3 + random.nextInt(3));
         }
-        return texts;
+        Thread threadPalindrome = new Thread(() -> {
+            for (String text : texts) {
+                if (palindrome(text)) {
+                    if (text.length() == 3) {
+                        count3.incrementAndGet();
+                    } else if (text.length() == 4) {
+                        count4.incrementAndGet();
+                    } else if (text.length() == 5) {
+                        count5.incrementAndGet();
+                    }
+                }
+            }
+        });
+
+        Thread threadDecreasing = new Thread(() -> {
+            for (String text : texts) {
+                if (decreasing(text)) {
+                    if (text.length() == 3) {
+                        count3.incrementAndGet();
+                    } else if (text.length() == 4) {
+                        count4.incrementAndGet();
+                    } else if (text.length() == 5) {
+                        count5.incrementAndGet();
+                    }
+                }
+            }
+        });
+
+        Thread threadIncreasing = new Thread(() -> {
+            for (String text : texts) {
+                if (increasing(text)) {
+                    if (text.length() == 3) {
+                        count3.incrementAndGet();
+                    } else if (text.length() == 4) {
+                        count4.incrementAndGet();
+                    } else if (text.length() == 5) {
+                        count5.incrementAndGet();
+                    }
+                }
+            }
+        });
+
+        threadPalindrome.start();
+        threadDecreasing.start();
+        threadIncreasing.start();
+        threadPalindrome.join();
+        threadDecreasing.join();
+        threadIncreasing.join();
+        System.out.println("Красивых слов с длиной 3: " + count3.get() + " шт");
+        System.out.println("Красивых слов с длиной 4: " + count4.get() + " шт");
+        System.out.println("Красивых слов с длиной 5: " + count5.get() + " шт");
     }
 
     private static String generateText(String letters, int length) {
@@ -41,27 +74,15 @@ public class Main {
         return text.toString();
     }
 
-    private static void countBeautiful(String[] texts, int length, AtomicInteger count) {
-        for (String text : texts) {
-            if (text.length() == length && beautiful(text)) {
-                count.incrementAndGet();
-            }
-        }
-    }
-
-    private static boolean beautiful(String text) {
-        return palindrome(text) || decreasing(text) || increasing(text);
-    }
-
     private static boolean palindrome(String text) {
-        int left = 0;
-        int right = text.length() - 1;
-        while (left < right) {
-            if (text.charAt(left) != text.charAt(right)) {
+        int start = 0;
+        int end = text.length() - 1;
+        while (start < end) {
+            if (text.charAt(start) != text.charAt(end)) {
                 return false;
             }
-            left++;
-            right--;
+            start++;
+            end--;
         }
         return true;
     }
